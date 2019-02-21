@@ -1,0 +1,23 @@
+{
+  "publisher": "qub",
+  "project": "qub-clean",
+  "version": "1",
+  "java": {
+    "mainClass": "qub.Clean",
+    "shortcutName": "qub-clean",
+    "version": "1.8",
+    "sources": {
+      "version": "1.8"
+    },
+    "tests": {
+      "version": "1.8"
+    },
+    "dependencies": [
+      {
+        "publisher": "qub",
+        "project": "qub-java",
+        "version": "44"
+      }
+    ]
+  }
+}
