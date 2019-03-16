@@ -1,16 +1,16 @@
 package qub;
 
-public class CleanTests
+public class QubCleanTests
 {
     public static void test(TestRunner runner)
     {
-        runner.testGroup(Clean.class, () ->
+        runner.testGroup(QubClean.class, () ->
         {
             runner.testGroup("main(String[])", () ->
             {
                 runner.test("with null", (Test test) ->
                 {
-                    test.assertThrows(() -> Clean.main((String[])null), new PreConditionFailure("args cannot be null."));
+                    test.assertThrows(() -> QubClean.main((String[])null), new PreConditionFailure("args cannot be null."));
                 });
             });
 
@@ -244,7 +244,7 @@ public class CleanTests
 
         final Console result = new Console(Iterable.create(commandLineArguments));
         result.setLineSeparator("\n");
-        result.setOutput(output);
+        result.setOutputCharacterWriteStream(output);
 
         return result;
     }
@@ -268,6 +268,6 @@ public class CleanTests
     {
         PreCondition.assertNotNull(console, "console");
 
-        new Clean().main(console);
+        new QubClean().main(console);
     }
 }

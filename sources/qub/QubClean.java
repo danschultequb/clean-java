@@ -1,6 +1,6 @@
 package qub;
 
-public class Clean
+public class QubClean
 {
     public void main(Console console)
     {
@@ -158,7 +158,7 @@ public class Clean
 
         try (final Console console = new Console(args))
         {
-            new Clean().main(console);
+            new QubClean().main(console);
         }
     }
 }
