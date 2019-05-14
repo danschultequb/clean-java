@@ -217,14 +217,14 @@ public class QubCleanTests
 
     private static InMemoryCharacterStream getInMemoryCharacterStream(Test test)
     {
-        return new InMemoryCharacterStream(test.getParallelAsyncRunner());
+        return new InMemoryCharacterStream();
     }
 
     private static InMemoryFileSystem getInMemoryFileSystem(Test test)
     {
         PreCondition.assertNotNull(test, "test");
 
-        final InMemoryFileSystem fileSystem = new InMemoryFileSystem(test.getParallelAsyncRunner(), test.getClock());
+        final InMemoryFileSystem fileSystem = new InMemoryFileSystem(test.getClock(), test::getParallelAsyncRunner);
         fileSystem.createRoot("/");
 
         return fileSystem;

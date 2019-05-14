@@ -8,10 +8,10 @@ public class QubClean
 
         if (shouldShowUsage(console))
         {
-            console.writeLine("Usage: qub-clean [[-folder=]<folder-path-to-clean>]");
-            console.writeLine("  Used to clean build outputs from source code projects.");
-            console.writeLine("  -folder: The folder to clean. This can be specified either with the -folder");
-            console.writeLine("           argument name or without it.");
+            console.writeLine("Usage: qub-clean [[-folder=]<folder-path-to-clean>]").await();
+            console.writeLine("  Used to clean build outputs from source code projects.").await();
+            console.writeLine("  -folder: The folder to clean. This can be specified either with the -folder").await();
+            console.writeLine("           argument name or without it.").await();
         }
         else
         {
@@ -27,7 +27,7 @@ public class QubClean
                 final Folder folderToClean = getFolderToClean(console);
                 if (!folderToClean.exists().await())
                 {
-                    console.writeLine("The folder " + folderToClean + " doesn't exist.");
+                    console.writeLine("The folder " + folderToClean + " doesn't exist.").await();
                 }
                 else
                 {
@@ -35,41 +35,41 @@ public class QubClean
                     for (final String folderNameToClean : Iterable.create("outputs", "out", "target", "output", "dist"))
                     {
                         final Folder folderToDelete = folderToClean.getFolder(folderNameToClean).await();
-                        verboseLog.run("Checking if " + folderToDelete + " exists...");
+                        verboseLog.run("Checking if " + folderToDelete + " exists...").await();
                         if (!folderToDelete.exists().await())
                         {
-                            verboseLog.run("Doesn't exist.");
+                            verboseLog.run("Doesn't exist.").await();
                         }
                         else
                         {
                             ++foldersCleaned;
-                            console.write("Deleting folder " + folderToDelete + "...");
+                            console.write("Deleting folder " + folderToDelete + "...").await();
                             try
                             {
                                 folderToDelete.delete().await();
-                                console.writeLine(" Done.");
+                                console.writeLine(" Done.").await();
                             }
                             catch (Throwable error)
                             {
-                                console.writeLine(" Failed.");
-                                console.writeLine(error.getMessage());
+                                console.writeLine(" Failed.").await();
+                                console.writeLine(error.getMessage()).await();
                             }
                         }
                     }
 
                     if (foldersCleaned == 0)
                     {
-                        console.writeLine("Found no folders to delete.");
+                        console.writeLine("Found no folders to delete.").await();
                     }
                 }
             }
             catch (Throwable error)
             {
-                console.writeLine(error.getMessage());
+                console.writeLine(error.getMessage()).await();
             }
 
             final Duration compilationDuration = stopwatch.stop().toSeconds();
-            console.writeLine("Done (" + compilationDuration.toString("0.0") + ")");
+            console.writeLine("Done (" + compilationDuration.toString("0.0") + ")").await();
         }
     }
 
