@@ -224,8 +224,8 @@ public class QubCleanTests
     {
         PreCondition.assertNotNull(test, "test");
 
-        final InMemoryFileSystem fileSystem = new InMemoryFileSystem(test.getClock(), test::getParallelAsyncRunner);
-        fileSystem.createRoot("/");
+        final InMemoryFileSystem fileSystem = new InMemoryFileSystem(test.getClock());
+        fileSystem.createRoot("/").await();
 
         return fileSystem;
     }
