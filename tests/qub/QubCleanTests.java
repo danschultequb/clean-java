@@ -21,21 +21,6 @@ public class QubCleanTests
                     test.assertThrows(() -> main((Console)null), new PreConditionFailure("console cannot be null."));
                 });
 
-                runner.test("with /? command line argument", (Test test) ->
-                {
-                    final InMemoryCharacterStream output = getInMemoryCharacterStream(test);
-                    try (final Console console = createConsole(output, "/?"))
-                    {
-                        main(console);
-                    }
-                    test.assertEqual(
-                        "Usage: qub-clean [[-folder=]<folder-path-to-clean>]\n" +
-                        "  Used to clean build outputs from source code projects.\n" +
-                        "  -folder: The folder to clean. This can be specified either with the -folder\n" +
-                        "           argument name or without it.\n",
-                        output.getText().await());
-                });
-
                 runner.test("with -? command line argument", (Test test) ->
                 {
                     final InMemoryCharacterStream output = getInMemoryCharacterStream(test);
@@ -44,11 +29,13 @@ public class QubCleanTests
                         main(console);
                     }
                     test.assertEqual(
-                        "Usage: qub-clean [[-folder=]<folder-path-to-clean>]\n" +
-                        "  Used to clean build outputs from source code projects.\n" +
-                        "  -folder: The folder to clean. This can be specified either with the -folder\n" +
-                        "           argument name or without it.\n",
-                        output.getText().await());
+                        Iterable.create(
+                            "Usage: qub-clean [[--folder=]<folder-to-clean>] [--verbose] [--help]",
+                            "  Used to clean build outputs from source code projects.",
+                            "  --folder: The folder to clean. Defaults to the current folder.",
+                            "  --verbose: Whether or not to show verbose logs.",
+                            "  --help(?): Show the help message for this application."),
+                        Strings.getLines(output.getText().await()));
                 });
 
                 runner.test("when no folders to clean exist", (Test test) ->
@@ -242,7 +229,7 @@ public class QubCleanTests
         PreCondition.assertNotNull(output, "output");
         PreCondition.assertNotNull(commandLineArguments, "commandLineArguments");
 
-        final Console result = new Console(Iterable.create(commandLineArguments));
+        final Console result = new Console(CommandLineArguments.create(commandLineArguments));
         result.setLineSeparator("\n");
         result.setOutputCharacterWriteStream(output);
 

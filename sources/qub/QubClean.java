@@ -2,16 +2,21 @@ package qub;
 
 public class QubClean
 {
-    public void main(Console console)
+    public static void main(Console console)
     {
         PreCondition.assertNotNull(console, "console");
 
-        if (shouldShowUsage(console))
+        final CommandLineParameters parameters = console.getCommandLineParameters();
+        final CommandLineParameter<Folder> folderToCleanParameter = parameters.addPositionalFolder("folder", console)
+            .setValueName("<folder-to-clean>")
+            .setDescription("The folder to clean. Defaults to the current folder.");
+        final CommandLineParameterVerbose verbose = parameters.addVerbose(console);
+        final CommandLineParameterBoolean help = parameters.addHelp();
+
+        if (help.getValue().await())
         {
-            console.writeLine("Usage: qub-clean [[-folder=]<folder-path-to-clean>]").await();
-            console.writeLine("  Used to clean build outputs from source code projects.").await();
-            console.writeLine("  -folder: The folder to clean. This can be specified either with the -folder").await();
-            console.writeLine("           argument name or without it.").await();
+            parameters.writeHelpLines(console, "qub-clean", "Used to clean build outputs from source code projects.").await();
+            console.setExitCode(-1);
         }
         else
         {
@@ -22,9 +27,7 @@ public class QubClean
             {
                 console.writeLine("Cleaning...").await();
 
-                final Function1<String,Result<?>> verboseLog = getVerboseLog(console);
-
-                final Folder folderToClean = getFolderToClean(console);
+                final Folder folderToClean = folderToCleanParameter.getValue().await();
                 if (!folderToClean.exists().await())
                 {
                     console.writeLine("The folder " + folderToClean + " doesn't exist.").await();
@@ -35,10 +38,10 @@ public class QubClean
                     for (final String folderNameToClean : Iterable.create("outputs", "out", "target", "output", "dist"))
                     {
                         final Folder folderToDelete = folderToClean.getFolder(folderNameToClean).await();
-                        verboseLog.run("Checking if " + folderToDelete + " exists...").await();
+                        verbose.writeLine("Checking if " + folderToDelete + " exists...").await();
                         if (!folderToDelete.exists().await())
                         {
-                            verboseLog.run("Doesn't exist.").await();
+                            verbose.writeLine("Doesn't exist.").await();
                         }
                         else
                         {
@@ -73,92 +76,8 @@ public class QubClean
         }
     }
 
-    private static boolean shouldShowUsage(Console console)
-    {
-        PreCondition.assertNotNull(console, "console");
-
-        return console.getCommandLine().contains(
-            (CommandLineArgument argument) ->
-            {
-                final String argumentString = argument.toString();
-                return argumentString.equals("/?") || argumentString.equals("-?");
-            });
-    }
-
-    private static Path getFolderPathToClean(Console console)
-    {
-        PreCondition.assertNotNull(console, "console");
-
-        Path result = null;
-        final CommandLine commandLine = console.getCommandLine();
-        if (commandLine.any())
-        {
-            CommandLineArgument folderArgument = commandLine.get("folder");
-            if (folderArgument == null)
-            {
-                folderArgument = commandLine.getArguments()
-                    .first((CommandLineArgument argument) -> argument.getName() == null);
-            }
-            if (folderArgument != null)
-            {
-                result = Path.parse(folderArgument.getValue());
-            }
-        }
-
-        if (result == null)
-        {
-            result = console.getCurrentFolderPath();
-        }
-
-        if (!result.isRooted())
-        {
-            result = console.getCurrentFolderPath().resolve(result).await();
-        }
-
-        PostCondition.assertNotNull(result, "result");
-        PostCondition.assertTrue(result.isRooted(), "result.isRooted()");
-
-        return result;
-    }
-
-    private static Folder getFolderToClean(Console console)
-    {
-        PreCondition.assertNotNull(console, "console");
-
-        final Folder result = console.getFileSystem().getFolder(getFolderPathToClean(console)).await();
-
-        PostCondition.assertNotNull(result, "result");
-
-        return result;
-    }
-
-    private static Function1<String,Result<?>> getVerboseLog(Console console)
-    {
-        PreCondition.assertNotNull(console, "console");
-
-        Function1<String,Result<?>> result = (String message) -> Result.success();
-        CommandLineArgument verboseArgument = console.getCommandLine().get("verbose");
-        if (verboseArgument != null)
-        {
-            final String verboseArgumentValue = verboseArgument.getValue();
-            if (Strings.isNullOrEmpty(verboseArgumentValue) || verboseArgumentValue.equals("true"))
-            {
-                result = (String message) -> console.writeLine("VERBOSE: " + message);
-            }
-        }
-
-        PostCondition.assertNotNull(result, "result");
-
-        return result;
-    }
-
     public static void main(String[] args)
     {
-        PreCondition.assertNotNull(args, "args");
-
-        try (final Console console = new Console(args))
-        {
-            new QubClean().main(console);
-        }
+        Console.run(args, QubClean::main);
     }
 }
