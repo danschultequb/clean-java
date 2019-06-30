@@ -6,7 +6,7 @@ public class QubClean
     {
         PreCondition.assertNotNull(console, "console");
 
-        final CommandLineParameters parameters = console.getCommandLineParameters();
+        final CommandLineParameters parameters = console.createCommandLineParameters();
         final CommandLineParameter<Folder> folderToCleanParameter = parameters.addPositionalFolder("folder", console)
             .setValueName("<folder-to-clean>")
             .setDescription("The folder to clean. Defaults to the current folder.");
