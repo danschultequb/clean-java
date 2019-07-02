@@ -11,6 +11,7 @@ public class QubClean
             .setValueName("<folder-to-clean>")
             .setDescription("The folder to clean. Defaults to the current folder.");
         final CommandLineParameterVerbose verbose = parameters.addVerbose(console);
+        final CommandLineParameterProfiler profiler = parameters.addProfiler(console, QubClean.class);
         final CommandLineParameterBoolean help = parameters.addHelp();
 
         if (help.getValue().await())
@@ -20,6 +21,8 @@ public class QubClean
         }
         else
         {
+            profiler.await();
+
             final Stopwatch stopwatch = console.getStopwatch();
             stopwatch.start();
 
