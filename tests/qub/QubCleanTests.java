@@ -33,7 +33,7 @@ public class QubCleanTests
                             "Usage: qub-clean [[--folder=]<folder-to-clean>] [--verbose] [--profiler] [--help]",
                             "  Used to clean build outputs from source code projects.",
                             "  --folder: The folder to clean. Defaults to the current folder.",
-                            "  --verbose: Whether or not to show verbose logs.",
+                            "  --verbose(v): Whether or not to show verbose logs.",
                             "  --profiler: Whether or not this application should pause before it is run to allow a profiler to be attached.",
                             "  --help(?): Show the help message for this application."),
                         Strings.getLines(output.getText().await()));
