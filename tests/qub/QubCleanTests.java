@@ -1,8 +1,8 @@
 package qub;
 
-public class QubCleanTests
+public interface QubCleanTests
 {
-    public static void test(TestRunner runner)
+    static void test(TestRunner runner)
     {
         runner.testGroup(QubClean.class, () ->
         {
@@ -18,7 +18,7 @@ public class QubCleanTests
             {
                 runner.test("with null", (Test test) ->
                 {
-                    test.assertThrows(() -> main((Console)null), new PreConditionFailure("console cannot be null."));
+                    test.assertThrows(() -> QubClean.main((Console)null), new PreConditionFailure("console cannot be null."));
                 });
 
                 runner.test("with -? command line argument", (Test test) ->
@@ -26,7 +26,7 @@ public class QubCleanTests
                     final InMemoryCharacterStream output = getInMemoryCharacterStream(test);
                     try (final Console console = createConsole(output, "-?"))
                     {
-                        main(console);
+                        QubClean.main(console);
                     }
                     test.assertEqual(
                         Iterable.create(
@@ -45,7 +45,7 @@ public class QubCleanTests
                     final Folder currentFolder = getInMemoryCurrentFolder(test);
                     try (final Console console = createConsole(output, currentFolder, "-verbose=false"))
                     {
-                        main(console);
+                        QubClean.main(console);
                     }
                     final String outputText = output.getText().await();
                     test.assertContains(outputText, "Cleaning...");
@@ -60,7 +60,7 @@ public class QubCleanTests
                     final Folder currentFolder = getInMemoryCurrentFolder(test);
                     try (final Console console = createConsole(output, currentFolder, "-verbose=true"))
                     {
-                        main(console);
+                        QubClean.main(console);
                     }
                     final String outputText = output.getText().await();
                     test.assertContains(outputText, "Cleaning...");
@@ -85,7 +85,7 @@ public class QubCleanTests
                     test.assertTrue(outputsFolder.exists().await());
                     try (final Console console = createConsole(output, currentFolder))
                     {
-                        main(console);
+                        QubClean.main(console);
                     }
                     test.assertFalse(outputsFolder.exists().await());
                     final String outputText = output.getText().await();
@@ -103,7 +103,7 @@ public class QubCleanTests
                     test.assertTrue(outputsFolder.exists().await());
                     try (final Console console = createConsole(output, currentFolder, "-verbose"))
                     {
-                        main(console);
+                        QubClean.main(console);
                     }
                     test.assertFalse(outputsFolder.exists().await());
                     final String outputText = output.getText().await();
@@ -129,7 +129,7 @@ public class QubCleanTests
                     test.assertTrue(outputsFolder.exists().await());
                     try (final Console console = createConsole(output, currentFolder))
                     {
-                        main(console);
+                        QubClean.main(console);
                     }
                     test.assertTrue(outputsFolder.exists().await());
                     final String outputText = output.getText().await();
@@ -146,7 +146,7 @@ public class QubCleanTests
                     final Folder currentFolder = getInMemoryCurrentFolder(test);
                     try (final Console console = createConsole(output, currentFolder, "/i/dont/exist"))
                     {
-                        main(console);
+                        QubClean.main(console);
                     }
                     final String outputText = output.getText().await();
                     test.assertContains(outputText, "Cleaning...");
@@ -161,7 +161,7 @@ public class QubCleanTests
                     final Folder currentFolder = getInMemoryCurrentFolder(test);
                     try (final Console console = createConsole(output, currentFolder, "i/dont/exist"))
                     {
-                        main(console);
+                        QubClean.main(console);
                     }
                     final String outputText = output.getText().await();
                     test.assertContains(outputText, "Cleaning...");
@@ -176,7 +176,7 @@ public class QubCleanTests
                     final Folder currentFolder = getInMemoryCurrentFolder(test);
                     try (final Console console = createConsole(output, currentFolder, "-folder=/i/dont/exist"))
                     {
-                        main(console);
+                        QubClean.main(console);
                     }
                     final String outputText = output.getText().await();
                     test.assertContains(outputText, "Cleaning...");
@@ -191,7 +191,7 @@ public class QubCleanTests
                     final Folder currentFolder = getInMemoryCurrentFolder(test);
                     try (final Console console = createConsole(output, currentFolder, "-folder=i/dont/exist"))
                     {
-                        main(console);
+                        QubClean.main(console);
                     }
                     final String outputText = output.getText().await();
                     test.assertContains(outputText, "Cleaning...");
@@ -203,12 +203,12 @@ public class QubCleanTests
         });
     }
 
-    private static InMemoryCharacterStream getInMemoryCharacterStream(Test test)
+    static InMemoryCharacterStream getInMemoryCharacterStream(Test test)
     {
         return new InMemoryCharacterStream();
     }
 
-    private static InMemoryFileSystem getInMemoryFileSystem(Test test)
+    static InMemoryFileSystem getInMemoryFileSystem(Test test)
     {
         PreCondition.assertNotNull(test, "test");
 
@@ -218,14 +218,14 @@ public class QubCleanTests
         return fileSystem;
     }
 
-    private static Folder getInMemoryCurrentFolder(Test test)
+    static Folder getInMemoryCurrentFolder(Test test)
     {
         PreCondition.assertNotNull(test, "test");
 
         return getInMemoryFileSystem(test).getFolder("/").await();
     }
 
-    private static Console createConsole(CharacterWriteStream output, String... commandLineArguments)
+    static Console createConsole(CharacterWriteStream output, String... commandLineArguments)
     {
         PreCondition.assertNotNull(output, "output");
         PreCondition.assertNotNull(commandLineArguments, "commandLineArguments");
@@ -237,7 +237,7 @@ public class QubCleanTests
         return result;
     }
 
-    private static Console createConsole(CharacterWriteStream output, Folder currentFolder, String... commandLineArguments)
+    static Console createConsole(CharacterWriteStream output, Folder currentFolder, String... commandLineArguments)
     {
         PreCondition.assertNotNull(output, "output");
         PreCondition.assertNotNull(currentFolder, "currentFolder");
@@ -250,12 +250,5 @@ public class QubCleanTests
         PostCondition.assertNotNull(result, "result");
 
         return result;
-    }
-
-    private static void main(Console console)
-    {
-        PreCondition.assertNotNull(console, "console");
-
-        new QubClean().main(console);
     }
 }
