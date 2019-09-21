@@ -1,42 +1,33 @@
 package qub;
 
-public class QubClean
+public interface QubClean
 {
-    private final Folder folderToClean;
-    private final IndentedCharacterWriteStream output;
-    private final VerboseCharacterWriteStream verbose;
-
-    public QubClean(Folder folderToClean, CharacterWriteStream output, VerboseCharacterWriteStream verbose)
+    static Result<Void> run(Folder folderToClean, CharacterWriteStream outputStream, VerboseCharacterWriteStream verbose)
     {
         PreCondition.assertNotNull(folderToClean, "folderToClean");
-        PreCondition.assertNotNull(output, "output");
+        PreCondition.assertNotNull(outputStream, "outputStream");
         PreCondition.assertNotNull(verbose, "verbose");
 
-        this.folderToClean = folderToClean;
-        this.output = new IndentedCharacterWriteStream(output);
-        this.verbose = verbose;
-    }
-
-    public Result<Void> run()
-    {
         return Result.create(() ->
         {
+            final IndentedCharacterWriteStream output = new IndentedCharacterWriteStream(outputStream);
+
             output.writeLine("Cleaning...").await();
 
-            if (!this.folderToClean.exists().await())
+            if (!folderToClean.exists().await())
             {
-                output.writeLine("The folder " + this.folderToClean + " doesn't exist.").await();
+                output.writeLine("The folder " + folderToClean + " doesn't exist.").await();
             }
             else
             {
                 int foldersCleaned = 0;
                 for (final String folderNameToClean : Iterable.create("outputs", "out", "target", "output", "dist"))
                 {
-                    final Folder folderToDelete = this.folderToClean.getFolder(folderNameToClean).await();
-                    this.verbose.writeLine("Checking if " + folderToDelete + " exists...").await();
+                    final Folder folderToDelete = folderToClean.getFolder(folderNameToClean).await();
+                    verbose.writeLine("Checking if " + folderToDelete + " exists...").await();
                     if (!folderToDelete.exists().await())
                     {
-                        this.verbose.writeLine("Doesn't exist.").await();
+                        verbose.writeLine("Doesn't exist.").await();
                     }
                     else
                     {
@@ -64,7 +55,7 @@ public class QubClean
         });
     }
 
-    public static void main(Console console)
+    static void main(Console console)
     {
         PreCondition.assertNotNull(console, "console");
 
@@ -72,7 +63,7 @@ public class QubClean
         final CommandLineParameter<Folder> folderToCleanParameter = parameters.addPositionalFolder("folder", console)
             .setValueName("<folder-to-clean>")
             .setDescription("The folder to clean. Defaults to the current folder.");
-        final CommandLineParameterVerbose verbose = parameters.addVerbose(console);
+        final CommandLineParameterVerbose verboseParameter = parameters.addVerbose(console);
         final CommandLineParameterProfiler profiler = parameters.addProfiler(console, QubClean.class);
         final CommandLineParameterBoolean help = parameters.addHelp();
 
@@ -88,11 +79,10 @@ public class QubClean
             final Stopwatch stopwatch = console.getStopwatch();
             stopwatch.start();
 
-            final QubClean qubClean = new QubClean(
-                folderToCleanParameter.getValue().await(),
-                console.getOutputCharacterWriteStream(),
-                verbose.getVerboseCharacterWriteStream().await());
-            qubClean.run()
+            final Folder folderToClean = folderToCleanParameter.getValue().await();
+            final CharacterWriteStream output = console.getOutputCharacterWriteStream();
+            final VerboseCharacterWriteStream verbose = verboseParameter.getVerboseCharacterWriteStream().await();
+            QubClean.run(folderToClean, output, verbose)
                 .catchError((Throwable error) -> console.writeLine(error.getMessage()).await())
                 .await();
 
@@ -101,7 +91,7 @@ public class QubClean
         }
     }
 
-    public static void main(String[] args)
+    static void main(String[] args)
     {
         Console.run(args, QubClean::main);
     }
