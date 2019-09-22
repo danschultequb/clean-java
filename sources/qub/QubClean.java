@@ -59,35 +59,29 @@ public interface QubClean
     {
         PreCondition.assertNotNull(console, "console");
 
-        final CommandLineParameters parameters = console.createCommandLineParameters();
+        final CommandLineParameters parameters = console.createCommandLineParameters()
+            .setApplicationName("qub-clean")
+            .setApplicationDescription("Used to clean build outputs from source code projects.");
         final CommandLineParameter<Folder> folderToCleanParameter = parameters.addPositionalFolder("folder", console)
             .setValueName("<folder-to-clean>")
             .setDescription("The folder to clean. Defaults to the current folder.");
         final CommandLineParameterVerbose verboseParameter = parameters.addVerbose(console);
         final CommandLineParameterProfiler profiler = parameters.addProfiler(console, QubClean.class);
-        final CommandLineParameterBoolean help = parameters.addHelp();
+        final CommandLineParameterHelp help = parameters.addHelp();
 
-        if (help.getValue().await())
-        {
-            parameters.writeHelpLines(console, "qub-clean", "Used to clean build outputs from source code projects.").await();
-            console.setExitCode(-1);
-        }
-        else
+        if (!help.showApplicationHelpLines(console).await())
         {
             profiler.await();
 
-            final Stopwatch stopwatch = console.getStopwatch();
-            stopwatch.start();
-
-            final Folder folderToClean = folderToCleanParameter.getValue().await();
-            final CharacterWriteStream output = console.getOutputCharacterWriteStream();
-            final VerboseCharacterWriteStream verbose = verboseParameter.getVerboseCharacterWriteStream().await();
-            QubClean.run(folderToClean, output, verbose)
-                .catchError((Throwable error) -> console.writeLine(error.getMessage()).await())
-                .await();
-
-            final Duration compilationDuration = stopwatch.stop().toSeconds();
-            console.writeLine("Done (" + compilationDuration.toString("0.0") + ")").await();
+            console.showDuration(() ->
+            {
+                final Folder folderToClean = folderToCleanParameter.getValue().await();
+                final CharacterWriteStream output = console.getOutputCharacterWriteStream();
+                final VerboseCharacterWriteStream verbose = verboseParameter.getVerboseCharacterWriteStream().await();
+                QubClean.run(folderToClean, output, verbose)
+                    .catchError((Throwable error) -> console.writeLine(error.getMessage()).await())
+                    .await();
+            });
         }
     }
 
