@@ -11,6 +11,25 @@ public interface QubClean
     {
         PreCondition.assertNotNull(console, "console");
 
+        final QubCleanParameters parameters = QubClean.getParameters(console);
+        if (parameters != null)
+        {
+            console.showDuration(() ->
+            {
+                QubClean.run(parameters);
+            });
+        }
+    }
+
+    /**
+     * Get the QubCleanParameters object from the provided Console and its command line arguments.
+     * @param console The Console to populate the QubCleanParameters object from.
+     * @return The QubCleanParameters object or null if a help argument was provided.
+     */
+    static QubCleanParameters getParameters(Console console)
+    {
+        PreCondition.assertNotNull(console, "console");
+
         final CommandLineParameters parameters = console.createCommandLineParameters()
             .setApplicationName("qub-clean")
             .setApplicationDescription("Used to clean build outputs from source code projects.");
@@ -21,21 +40,19 @@ public interface QubClean
         final CommandLineParameterProfiler profiler = parameters.addProfiler(console, QubClean.class);
         final CommandLineParameterHelp help = parameters.addHelp();
 
+        QubCleanParameters result = null;
         if (!help.showApplicationHelpLines(console).await())
         {
             profiler.await();
 
-            console.showDuration(() ->
-            {
-                final QubCleanParameters qubCleanParameters = new QubCleanParameters(
-                    folderToCleanParameter.getValue().await(),
-                    console.getOutputCharacterWriteStream())
-                    .setVerbose(verboseParameter.getVerboseCharacterWriteStream().await());
-                QubClean.run(qubCleanParameters)
-                    .catchError((Throwable error) -> console.writeLine(error.getMessage()).await())
-                    .await();
-            });
+            final Folder folderToClean = folderToCleanParameter.getValue().await();
+            final CharacterWriteStream output = console.getOutputCharacterWriteStream();
+            final VerboseCharacterWriteStream verbose = verboseParameter.getVerboseCharacterWriteStream().await();
+            result = new QubCleanParameters(folderToClean, output)
+                .setVerbose(verbose);
         }
+
+        return result;
     }
 
     static Result<Void> run(QubCleanParameters parameters)
