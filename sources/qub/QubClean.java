@@ -4,49 +4,35 @@ public interface QubClean
 {
     static void main(String[] args)
     {
-        Console.run(args, QubClean::main);
-    }
-
-    static void main(Console console)
-    {
-        PreCondition.assertNotNull(console, "console");
-
-        final QubCleanParameters parameters = QubClean.getParameters(console);
-        if (parameters != null)
-        {
-            console.showDuration(() ->
-            {
-                QubClean.run(parameters);
-            });
-        }
+        Process.run(args, QubClean::getParameters, QubClean::run);
     }
 
     /**
      * Get the QubCleanParameters object from the provided Console and its command line arguments.
-     * @param console The Console to populate the QubCleanParameters object from.
+     * @param process The Process to populate the QubCleanParameters object from.
      * @return The QubCleanParameters object or null if a help argument was provided.
      */
-    static QubCleanParameters getParameters(Console console)
+    static QubCleanParameters getParameters(Process process)
     {
-        PreCondition.assertNotNull(console, "console");
+        PreCondition.assertNotNull(process, "process");
 
-        final CommandLineParameters parameters = console.createCommandLineParameters()
+        final CommandLineParameters parameters = process.createCommandLineParameters()
             .setApplicationName("qub-clean")
             .setApplicationDescription("Used to clean build outputs from source code projects.");
-        final CommandLineParameter<Folder> folderToCleanParameter = parameters.addPositionalFolder("folder", console)
+        final CommandLineParameter<Folder> folderToCleanParameter = parameters.addPositionalFolder("folder", process)
             .setValueName("<folder-to-clean>")
             .setDescription("The folder to clean. Defaults to the current folder.");
-        final CommandLineParameterVerbose verboseParameter = parameters.addVerbose(console);
-        final CommandLineParameterProfiler profiler = parameters.addProfiler(console, QubClean.class);
+        final CommandLineParameterVerbose verboseParameter = parameters.addVerbose(process);
+        final CommandLineParameterProfiler profiler = parameters.addProfiler(process, QubClean.class);
         final CommandLineParameterHelp help = parameters.addHelp();
 
         QubCleanParameters result = null;
-        if (!help.showApplicationHelpLines(console).await())
+        if (!help.showApplicationHelpLines(process).await())
         {
             profiler.await();
 
             final Folder folderToClean = folderToCleanParameter.getValue().await();
-            final CharacterWriteStream output = console.getOutputCharacterWriteStream();
+            final CharacterWriteStream output = process.getOutputCharacterWriteStream();
             final VerboseCharacterWriteStream verbose = verboseParameter.getVerboseCharacterWriteStream().await();
             result = new QubCleanParameters(folderToClean, output)
                 .setVerbose(verbose);

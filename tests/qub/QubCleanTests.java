@@ -10,71 +10,149 @@ public interface QubCleanTests
             {
                 runner.test("with null", (Test test) ->
                 {
-                    test.assertThrows(() -> QubClean.main((String[])null), new PreConditionFailure("args cannot be null."));
+                    test.assertThrows(() -> QubClean.main((String[])null),
+                        new PreConditionFailure("arguments cannot be null."));
                 });
             });
 
-            runner.testGroup("main(Console)", () ->
+            runner.testGroup("getParameters(Process)", () ->
             {
                 runner.test("with null", (Test test) ->
                 {
-                    test.assertThrows(() -> QubClean.main((Console)null), new PreConditionFailure("console cannot be null."));
+                    test.assertThrows(() -> QubClean.getParameters(null),
+                        new PreConditionFailure("process cannot be null."));
                 });
 
-                runner.test("with -? command line argument", (Test test) ->
+                runner.test("with no arguments", (Test test) ->
                 {
-                    final InMemoryCharacterStream output = getInMemoryCharacterStream(test);
-                    try (final Console console = createConsole(output, "-?"))
+                    try (final Process process = Process.create())
                     {
-                        QubClean.main(console);
+                        final QubCleanParameters parameters = QubClean.getParameters(process);
+                        test.assertNotNull(parameters);
+                        test.assertEqual(process.getCurrentFolder().await(), parameters.getFolderToClean());
+                        test.assertSame(process.getOutputCharacterWriteStream(), parameters.getOutput());
+                        test.assertNotNull(parameters.getVerbose());
                     }
-                    test.assertEqual(
-                        Iterable.create(
-                            "Usage: qub-clean [[--folder=]<folder-to-clean>] [--verbose] [--profiler] [--help]",
-                            "  Used to clean build outputs from source code projects.",
-                            "  --folder: The folder to clean. Defaults to the current folder.",
-                            "  --verbose(v): Whether or not to show verbose logs.",
-                            "  --profiler: Whether or not this application should pause before it is run to allow a profiler to be attached.",
-                            "  --help(?): Show the help message for this application."),
-                        Strings.getLines(output.getText().await()));
+                });
+
+                runner.test("with -?", (Test test) ->
+                {
+                    final InMemoryCharacterStream output = new InMemoryCharacterStream();
+                    try (final Process process = QubCleanTests.createProcess(output, "-?"))
+                    {
+                        test.assertNull(QubClean.getParameters(process));
+
+                        test.assertEqual(
+                            Iterable.create(
+                                "Usage: qub-clean [[--folder=]<folder-to-clean>] [--verbose] [--profiler] [--help]",
+                                "  Used to clean build outputs from source code projects.",
+                                "  --folder: The folder to clean. Defaults to the current folder.",
+                                "  --verbose(v): Whether or not to show verbose logs.",
+                                "  --profiler: Whether or not this application should pause before it is run to allow a profiler to be attached.",
+                                "  --help(?): Show the help message for this application."),
+                            Strings.getLines(output.getText().await()));
+                    }
+                });
+
+                runner.test("with anonymous relative path argument", (Test test) ->
+                {
+                    try (final Process process = Process.create("hello/there"))
+                    {
+                        final QubCleanParameters parameters = QubClean.getParameters(process);
+                        test.assertNotNull(parameters);
+                        test.assertEqual(process.getCurrentFolder().await().getFolder("hello/there").await(), parameters.getFolderToClean());
+                        test.assertSame(process.getOutputCharacterWriteStream(), parameters.getOutput());
+                        test.assertNotNull(parameters.getVerbose());
+                    }
+                });
+
+                runner.test("with named relative path argument", (Test test) ->
+                {
+                    try (final Process process = Process.create("--folder=hello/there"))
+                    {
+                        final QubCleanParameters parameters = QubClean.getParameters(process);
+                        test.assertNotNull(parameters);
+                        test.assertEqual(process.getCurrentFolder().await().getFolder("hello/there").await(), parameters.getFolderToClean());
+                        test.assertSame(process.getOutputCharacterWriteStream(), parameters.getOutput());
+                        test.assertNotNull(parameters.getVerbose());
+                    }
+                });
+
+                runner.test("with anonymous rooted path argument", (Test test) ->
+                {
+                    try (final Process process = Process.create("/hello/there"))
+                    {
+                        final QubCleanParameters parameters = QubClean.getParameters(process);
+                        test.assertNotNull(parameters);
+                        test.assertEqual(process.getFileSystem().getFolder("/hello/there").await(), parameters.getFolderToClean());
+                        test.assertSame(process.getOutputCharacterWriteStream(), parameters.getOutput());
+                        test.assertNotNull(parameters.getVerbose());
+                    }
+                });
+
+                runner.test("with named rooted path argument", (Test test) ->
+                {
+                    try (final Process process = Process.create("--folder=/hello/there"))
+                    {
+                        final QubCleanParameters parameters = QubClean.getParameters(process);
+                        test.assertNotNull(parameters);
+                        test.assertEqual(process.getFileSystem().getFolder("/hello/there").await(), parameters.getFolderToClean());
+                        test.assertSame(process.getOutputCharacterWriteStream(), parameters.getOutput());
+                        test.assertNotNull(parameters.getVerbose());
+                    }
+                });
+            });
+
+            runner.testGroup("run(QubCleanParameters)", () ->
+            {
+                runner.test("with null", (Test test) ->
+                {
+                    test.assertThrows(() -> QubClean.run((QubCleanParameters)null),
+                        new PreConditionFailure("parameters cannot be null."));
                 });
 
                 runner.test("when no folders to clean exist", (Test test) ->
                 {
                     final InMemoryCharacterStream output = getInMemoryCharacterStream(test);
                     final Folder currentFolder = getInMemoryCurrentFolder(test);
-                    try (final Console console = createConsole(output, currentFolder, "-verbose=false"))
+                    try (final Process process = createProcess(output, currentFolder, "-verbose=false"))
                     {
-                        QubClean.main(console);
+                        QubClean.run(QubClean.getParameters(process));
+
+                        test.assertEqual(0, process.getExitCode());
                     }
-                    final String outputText = output.getText().await();
-                    test.assertContains(outputText, "Cleaning...");
-                    test.assertContains(outputText, "Found no folders to delete.");
-                    test.assertContains(outputText, "Done (");
-                    test.assertContains(outputText, "Seconds)");
+                    test.assertEqual(
+                        Iterable.create(
+                            "Cleaning...",
+                            "Found no folders to delete."),
+                        Strings.getLines(output.getText().await()));
                 });
 
                 runner.test("when no folders to clean exist with verbose", (Test test) ->
                 {
                     final InMemoryCharacterStream output = getInMemoryCharacterStream(test);
                     final Folder currentFolder = getInMemoryCurrentFolder(test);
-                    try (final Console console = createConsole(output, currentFolder, "-verbose=true"))
+                    try (final Process process = createProcess(output, currentFolder, "-verbose=true"))
                     {
-                        QubClean.main(console);
+                        QubClean.run(QubClean.getParameters(process));
+
+                        test.assertEqual(0, process.getExitCode());
                     }
-                    final String outputText = output.getText().await();
-                    test.assertContains(outputText, "Cleaning...");
-                    test.assertContains(outputText, "VERBOSE: Checking if /outputs exists...");
-                    test.assertContains(outputText, "VERBOSE: Doesn't exist.");
-                    test.assertContains(outputText, "VERBOSE: Checking if /out exists...");
-                    test.assertContains(outputText, "VERBOSE: Doesn't exist.");
-                    test.assertContains(outputText, "VERBOSE: Checking if /target exists...");
-                    test.assertContains(outputText, "VERBOSE: Doesn't exist.");
-                    test.assertContains(outputText, "VERBOSE: Checking if /output exists...");
-                    test.assertContains(outputText, "VERBOSE: Doesn't exist.");
-                    test.assertContains(outputText, "Found no folders to delete.");
-                    test.assertContains(outputText, "Done (");
-                    test.assertContains(outputText, "Seconds)");
+                    test.assertEqual(
+                        Iterable.create(
+                            "Cleaning...",
+                            "VERBOSE: Checking if /outputs exists...",
+                            "VERBOSE: Doesn't exist.",
+                            "VERBOSE: Checking if /out exists...",
+                            "VERBOSE: Doesn't exist.",
+                            "VERBOSE: Checking if /target exists...",
+                            "VERBOSE: Doesn't exist.",
+                            "VERBOSE: Checking if /output exists...",
+                            "VERBOSE: Doesn't exist.",
+                            "VERBOSE: Checking if /dist exists...",
+                            "VERBOSE: Doesn't exist.",
+                            "Found no folders to delete."),
+                        Strings.getLines(output.getText().await()));
                 });
 
                 runner.test("when outputs folder exists", (Test test) ->
@@ -83,16 +161,18 @@ public interface QubCleanTests
                     final Folder currentFolder = getInMemoryCurrentFolder(test);
                     final Folder outputsFolder = currentFolder.createFolder("outputs").await();
                     test.assertTrue(outputsFolder.exists().await());
-                    try (final Console console = createConsole(output, currentFolder))
+                    try (final Process process = createProcess(output, currentFolder))
                     {
-                        QubClean.main(console);
+                        QubClean.run(QubClean.getParameters(process));
+
+                        test.assertEqual(0, process.getExitCode());
                     }
                     test.assertFalse(outputsFolder.exists().await());
-                    final String outputText = output.getText().await();
-                    test.assertContains(outputText, "Cleaning...");
-                    test.assertContains(outputText, "Deleting folder /outputs... Done.");
-                    test.assertContains(outputText, "Done (");
-                    test.assertContains(outputText, "Seconds)");
+                    test.assertEqual(
+                        Iterable.create(
+                            "Cleaning...",
+                            "Deleting folder /outputs... Done."),
+                        Strings.getLines(output.getText().await()));
                 });
 
                 runner.test("when outputs folder exists with verbose", (Test test) ->
@@ -101,22 +181,27 @@ public interface QubCleanTests
                     final Folder currentFolder = getInMemoryCurrentFolder(test);
                     final Folder outputsFolder = currentFolder.createFolder("outputs").await();
                     test.assertTrue(outputsFolder.exists().await());
-                    try (final Console console = createConsole(output, currentFolder, "-verbose"))
+                    try (final Process process = createProcess(output, currentFolder, "-verbose"))
                     {
-                        QubClean.main(console);
+                        QubClean.run(QubClean.getParameters(process));
+
+                        test.assertEqual(0, process.getExitCode());
                     }
                     test.assertFalse(outputsFolder.exists().await());
-                    final String outputText = output.getText().await();
-                    test.assertContains(outputText, "Cleaning...");
-                    test.assertContains(outputText, "Deleting folder /outputs... Done.");
-                    test.assertContains(outputText, "VERBOSE: Checking if /out exists...");
-                    test.assertContains(outputText, "VERBOSE: Doesn't exist.");
-                    test.assertContains(outputText, "VERBOSE: Checking if /target exists...");
-                    test.assertContains(outputText, "VERBOSE: Doesn't exist.");
-                    test.assertContains(outputText, "VERBOSE: Checking if /output exists...");
-                    test.assertContains(outputText, "VERBOSE: Doesn't exist.");
-                    test.assertContains(outputText, "Done (");
-                    test.assertContains(outputText, "Seconds)");
+                    test.assertEqual(
+                        Iterable.create(
+                            "Cleaning...",
+                            "VERBOSE: Checking if /outputs exists...",
+                            "Deleting folder /outputs... Done.",
+                            "VERBOSE: Checking if /out exists...",
+                            "VERBOSE: Doesn't exist.",
+                            "VERBOSE: Checking if /target exists...",
+                            "VERBOSE: Doesn't exist.",
+                            "VERBOSE: Checking if /output exists...",
+                            "VERBOSE: Doesn't exist.",
+                            "VERBOSE: Checking if /dist exists...",
+                            "VERBOSE: Doesn't exist."),
+                        Strings.getLines(output.getText().await()));
                 });
 
                 runner.test("when outputs folder exists but can't be deleted", (Test test) ->
@@ -127,77 +212,87 @@ public interface QubCleanTests
                     final Folder outputsFolder = currentFolder.createFolder("outputs").await();
                     fileSystem.setFolderCanDelete(outputsFolder.getPath(), false);
                     test.assertTrue(outputsFolder.exists().await());
-                    try (final Console console = createConsole(output, currentFolder))
+                    try (final Process process = createProcess(output, currentFolder))
                     {
-                        QubClean.main(console);
+                        QubClean.run(QubClean.getParameters(process));
+
+                        test.assertEqual(0, process.getExitCode());
                     }
                     test.assertTrue(outputsFolder.exists().await());
-                    final String outputText = output.getText().await();
-                    test.assertContains(outputText, "Cleaning...");
-                    test.assertContains(outputText, "Deleting folder /outputs... Failed.");
-                    test.assertContains(outputText, "The folder at \"/outputs\" doesn't exist.");
-                    test.assertContains(outputText, "Done (");
-                    test.assertContains(outputText, "Seconds)");
+                    test.assertEqual(
+                        Iterable.create(
+                            "Cleaning...",
+                            "Deleting folder /outputs... Failed.",
+                            "  The folder at \"/outputs\" doesn't exist."),
+                        Strings.getLines(output.getText().await()));
                 });
 
                 runner.test("with unnamed folder argument to rooted folder that doesn't exist", (Test test) ->
                 {
                     final InMemoryCharacterStream output = getInMemoryCharacterStream(test);
                     final Folder currentFolder = getInMemoryCurrentFolder(test);
-                    try (final Console console = createConsole(output, currentFolder, "/i/dont/exist"))
+                    try (final Process process = createProcess(output, currentFolder, "/i/dont/exist"))
                     {
-                        QubClean.main(console);
+                        QubClean.run(QubClean.getParameters(process));
+
+                        test.assertEqual(0, process.getExitCode());
                     }
-                    final String outputText = output.getText().await();
-                    test.assertContains(outputText, "Cleaning...");
-                    test.assertContains(outputText, "The folder /i/dont/exist doesn't exist.");
-                    test.assertContains(outputText, "Done (");
-                    test.assertContains(outputText, "Seconds)");
+                    test.assertEqual(
+                        Iterable.create(
+                            "Cleaning...",
+                            "The folder /i/dont/exist doesn't exist."),
+                        Strings.getLines(output.getText().await()));
                 });
 
                 runner.test("with named folder argument to unrooted folder that doesn't exist", (Test test) ->
                 {
                     final InMemoryCharacterStream output = getInMemoryCharacterStream(test);
                     final Folder currentFolder = getInMemoryCurrentFolder(test);
-                    try (final Console console = createConsole(output, currentFolder, "i/dont/exist"))
+                    try (final Process process = createProcess(output, currentFolder, "i/dont/exist"))
                     {
-                        QubClean.main(console);
+                        QubClean.run(QubClean.getParameters(process));
+
+                        test.assertEqual(0, process.getExitCode());
                     }
-                    final String outputText = output.getText().await();
-                    test.assertContains(outputText, "Cleaning...");
-                    test.assertContains(outputText, "The folder /i/dont/exist doesn't exist.");
-                    test.assertContains(outputText, "Done (");
-                    test.assertContains(outputText, "Seconds)");
+                    test.assertEqual(
+                        Iterable.create(
+                            "Cleaning...",
+                            "The folder /i/dont/exist doesn't exist."),
+                        Strings.getLines(output.getText().await()));
                 });
 
                 runner.test("with named folder argument to rooted folder that doesn't exist", (Test test) ->
                 {
                     final InMemoryCharacterStream output = getInMemoryCharacterStream(test);
                     final Folder currentFolder = getInMemoryCurrentFolder(test);
-                    try (final Console console = createConsole(output, currentFolder, "-folder=/i/dont/exist"))
+                    try (final Process process = createProcess(output, currentFolder, "-folder=/i/dont/exist"))
                     {
-                        QubClean.main(console);
+                        QubClean.run(QubClean.getParameters(process));
+
+                        test.assertEqual(0, process.getExitCode());
                     }
-                    final String outputText = output.getText().await();
-                    test.assertContains(outputText, "Cleaning...");
-                    test.assertContains(outputText, "The folder /i/dont/exist doesn't exist.");
-                    test.assertContains(outputText, "Done (");
-                    test.assertContains(outputText, "Seconds)");
+                    test.assertEqual(
+                        Iterable.create(
+                            "Cleaning...",
+                            "The folder /i/dont/exist doesn't exist."),
+                        Strings.getLines(output.getText().await()));
                 });
 
                 runner.test("with named folder argument to unrooted folder that doesn't exist", (Test test) ->
                 {
                     final InMemoryCharacterStream output = getInMemoryCharacterStream(test);
                     final Folder currentFolder = getInMemoryCurrentFolder(test);
-                    try (final Console console = createConsole(output, currentFolder, "-folder=i/dont/exist"))
+                    try (final Process process = createProcess(output, currentFolder, "-folder=i/dont/exist"))
                     {
-                        QubClean.main(console);
+                        QubClean.run(QubClean.getParameters(process));
+
+                        test.assertEqual(0, process.getExitCode());
                     }
-                    final String outputText = output.getText().await();
-                    test.assertContains(outputText, "Cleaning...");
-                    test.assertContains(outputText, "The folder /i/dont/exist doesn't exist.");
-                    test.assertContains(outputText, "Done (");
-                    test.assertContains(outputText, "Seconds)");
+                    test.assertEqual(
+                        Iterable.create(
+                            "Cleaning...",
+                            "The folder /i/dont/exist doesn't exist."),
+                        Strings.getLines(output.getText().await()));
                 });
             });
         });
@@ -225,25 +320,25 @@ public interface QubCleanTests
         return getInMemoryFileSystem(test).getFolder("/").await();
     }
 
-    static Console createConsole(CharacterWriteStream output, String... commandLineArguments)
+    static Process createProcess(CharacterWriteStream output, String... commandLineArguments)
     {
         PreCondition.assertNotNull(output, "output");
         PreCondition.assertNotNull(commandLineArguments, "commandLineArguments");
 
-        final Console result = new Console(CommandLineArguments.create(commandLineArguments));
+        final Process result = Process.create(commandLineArguments);
         result.setLineSeparator("\n");
         result.setOutputCharacterWriteStream(output);
 
         return result;
     }
 
-    static Console createConsole(CharacterWriteStream output, Folder currentFolder, String... commandLineArguments)
+    static Process createProcess(CharacterWriteStream output, Folder currentFolder, String... commandLineArguments)
     {
         PreCondition.assertNotNull(output, "output");
         PreCondition.assertNotNull(currentFolder, "currentFolder");
         PreCondition.assertNotNull(commandLineArguments, "commandLineArguments");
 
-        final Console result = createConsole(output, commandLineArguments);
+        final Process result = QubCleanTests.createProcess(output, commandLineArguments);
         result.setFileSystem(currentFolder.getFileSystem());
         result.setCurrentFolderPath(currentFolder.getPath());
 

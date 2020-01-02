@@ -1,7 +1,7 @@
 {
   "publisher": "qub",
   "project": "qub-java-clean",
-  "version": "1",
+  "version": "2",
   "java": {
     "mainClass": "qub.QubClean",
     "shortcutName": "qub-clean",
@@ -10,7 +10,7 @@
       {
         "publisher": "qub",
         "project": "qub-java",
-        "version": "135"
+        "version": "153"
       }
     ]
   }
