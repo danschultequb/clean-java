@@ -1,2 +1,2 @@
-# qub-java-clean
-A console application for cleaning source code outputs.
+# qub/clean-java
+An application for cleaning/deleting source code output folders.

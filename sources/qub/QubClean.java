@@ -4,15 +4,15 @@ public interface QubClean
 {
     static void main(String[] args)
     {
-        Process.run(args, QubClean::getParameters, QubClean::run);
+        QubProcess.run(args, QubClean::getParameters, QubClean::run);
     }
 
     /**
      * Get the QubCleanParameters object from the provided Console and its command line arguments.
-     * @param process The Process to populate the QubCleanParameters object from.
+     * @param process The QubProcess to populate the QubCleanParameters object from.
      * @return The QubCleanParameters object or null if a help argument was provided.
      */
-    static QubCleanParameters getParameters(Process process)
+    static QubCleanParameters getParameters(QubProcess process)
     {
         PreCondition.assertNotNull(process, "process");
 
