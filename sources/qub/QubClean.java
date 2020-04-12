@@ -32,7 +32,7 @@ public interface QubClean
             profiler.await();
 
             final Folder folderToClean = folderToCleanParameter.getValue().await();
-            final CharacterWriteStream output = process.getOutputCharacterWriteStream();
+            final CharacterWriteStream output = process.getOutputWriteStream();
             final VerboseCharacterWriteStream verbose = verboseParameter.getVerboseCharacterWriteStream().await();
             result = new QubCleanParameters(folderToClean, output)
                 .setVerbose(verbose);

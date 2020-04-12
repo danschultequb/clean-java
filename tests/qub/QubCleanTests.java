@@ -30,14 +30,14 @@ public interface QubCleanTests
                         final QubCleanParameters parameters = QubClean.getParameters(process);
                         test.assertNotNull(parameters);
                         test.assertEqual(process.getCurrentFolder().await(), parameters.getFolderToClean());
-                        test.assertSame(process.getOutputCharacterWriteStream(), parameters.getOutput());
+                        test.assertSame(process.getOutputWriteStream(), parameters.getOutput());
                         test.assertNotNull(parameters.getVerbose());
                     }
                 });
 
                 runner.test("with -?", (Test test) ->
                 {
-                    final InMemoryCharacterStream output = new InMemoryCharacterStream();
+                    final InMemoryCharacterToByteStream output = new InMemoryCharacterToByteStream();
                     try (final QubProcess process = QubCleanTests.createProcess(output, "-?"))
                     {
                         test.assertNull(QubClean.getParameters(process));
@@ -61,7 +61,7 @@ public interface QubCleanTests
                         final QubCleanParameters parameters = QubClean.getParameters(process);
                         test.assertNotNull(parameters);
                         test.assertEqual(process.getCurrentFolder().await().getFolder("hello/there").await(), parameters.getFolderToClean());
-                        test.assertSame(process.getOutputCharacterWriteStream(), parameters.getOutput());
+                        test.assertSame(process.getOutputWriteStream(), parameters.getOutput());
                         test.assertNotNull(parameters.getVerbose());
                     }
                 });
@@ -73,7 +73,7 @@ public interface QubCleanTests
                         final QubCleanParameters parameters = QubClean.getParameters(process);
                         test.assertNotNull(parameters);
                         test.assertEqual(process.getCurrentFolder().await().getFolder("hello/there").await(), parameters.getFolderToClean());
-                        test.assertSame(process.getOutputCharacterWriteStream(), parameters.getOutput());
+                        test.assertSame(process.getOutputWriteStream(), parameters.getOutput());
                         test.assertNotNull(parameters.getVerbose());
                     }
                 });
@@ -85,7 +85,7 @@ public interface QubCleanTests
                         final QubCleanParameters parameters = QubClean.getParameters(process);
                         test.assertNotNull(parameters);
                         test.assertEqual(process.getFileSystem().getFolder("/hello/there").await(), parameters.getFolderToClean());
-                        test.assertSame(process.getOutputCharacterWriteStream(), parameters.getOutput());
+                        test.assertSame(process.getOutputWriteStream(), parameters.getOutput());
                         test.assertNotNull(parameters.getVerbose());
                     }
                 });
@@ -97,7 +97,7 @@ public interface QubCleanTests
                         final QubCleanParameters parameters = QubClean.getParameters(process);
                         test.assertNotNull(parameters);
                         test.assertEqual(process.getFileSystem().getFolder("/hello/there").await(), parameters.getFolderToClean());
-                        test.assertSame(process.getOutputCharacterWriteStream(), parameters.getOutput());
+                        test.assertSame(process.getOutputWriteStream(), parameters.getOutput());
                         test.assertNotNull(parameters.getVerbose());
                     }
                 });
@@ -113,9 +113,9 @@ public interface QubCleanTests
 
                 runner.test("when no folders to clean exist", (Test test) ->
                 {
-                    final InMemoryCharacterStream output = getInMemoryCharacterStream(test);
-                    final Folder currentFolder = getInMemoryCurrentFolder(test);
-                    try (final QubProcess process = createProcess(output, currentFolder, "-verbose=false"))
+                    final InMemoryCharacterToByteStream output = QubCleanTests.getInMemoryCharacterToByteStream(test);
+                    final Folder currentFolder = QubCleanTests.getInMemoryCurrentFolder(test);
+                    try (final QubProcess process = QubCleanTests.createProcess(output, currentFolder, "-verbose=false"))
                     {
                         QubClean.run(QubClean.getParameters(process));
 
@@ -130,9 +130,9 @@ public interface QubCleanTests
 
                 runner.test("when no folders to clean exist with verbose", (Test test) ->
                 {
-                    final InMemoryCharacterStream output = getInMemoryCharacterStream(test);
-                    final Folder currentFolder = getInMemoryCurrentFolder(test);
-                    try (final QubProcess process = createProcess(output, currentFolder, "-verbose=true"))
+                    final InMemoryCharacterToByteStream output = QubCleanTests.getInMemoryCharacterToByteStream(test);
+                    final Folder currentFolder = QubCleanTests.getInMemoryCurrentFolder(test);
+                    try (final QubProcess process = QubCleanTests.createProcess(output, currentFolder, "-verbose=true"))
                     {
                         QubClean.run(QubClean.getParameters(process));
 
@@ -157,11 +157,11 @@ public interface QubCleanTests
 
                 runner.test("when outputs folder exists", (Test test) ->
                 {
-                    final InMemoryCharacterStream output = getInMemoryCharacterStream(test);
-                    final Folder currentFolder = getInMemoryCurrentFolder(test);
+                    final InMemoryCharacterToByteStream output = QubCleanTests.getInMemoryCharacterToByteStream(test);
+                    final Folder currentFolder = QubCleanTests.getInMemoryCurrentFolder(test);
                     final Folder outputsFolder = currentFolder.createFolder("outputs").await();
                     test.assertTrue(outputsFolder.exists().await());
-                    try (final QubProcess process = createProcess(output, currentFolder))
+                    try (final QubProcess process = QubCleanTests.createProcess(output, currentFolder))
                     {
                         QubClean.run(QubClean.getParameters(process));
 
@@ -177,11 +177,11 @@ public interface QubCleanTests
 
                 runner.test("when outputs folder exists with verbose", (Test test) ->
                 {
-                    final InMemoryCharacterStream output = getInMemoryCharacterStream(test);
-                    final Folder currentFolder = getInMemoryCurrentFolder(test);
+                    final InMemoryCharacterToByteStream output = QubCleanTests.getInMemoryCharacterToByteStream(test);
+                    final Folder currentFolder = QubCleanTests.getInMemoryCurrentFolder(test);
                     final Folder outputsFolder = currentFolder.createFolder("outputs").await();
                     test.assertTrue(outputsFolder.exists().await());
-                    try (final QubProcess process = createProcess(output, currentFolder, "-verbose"))
+                    try (final QubProcess process = QubCleanTests.createProcess(output, currentFolder, "-verbose"))
                     {
                         QubClean.run(QubClean.getParameters(process));
 
@@ -206,13 +206,13 @@ public interface QubCleanTests
 
                 runner.test("when outputs folder exists but can't be deleted", (Test test) ->
                 {
-                    final InMemoryCharacterStream output = getInMemoryCharacterStream(test);
+                    final InMemoryCharacterToByteStream output = QubCleanTests.getInMemoryCharacterToByteStream(test);
                     final InMemoryFileSystem fileSystem = getInMemoryFileSystem(test);
                     final Folder currentFolder = fileSystem.getFolder("/").await();
                     final Folder outputsFolder = currentFolder.createFolder("outputs").await();
                     fileSystem.setFolderCanDelete(outputsFolder.getPath(), false);
                     test.assertTrue(outputsFolder.exists().await());
-                    try (final QubProcess process = createProcess(output, currentFolder))
+                    try (final QubProcess process = QubCleanTests.createProcess(output, currentFolder))
                     {
                         QubClean.run(QubClean.getParameters(process));
 
@@ -229,9 +229,9 @@ public interface QubCleanTests
 
                 runner.test("with unnamed folder argument to rooted folder that doesn't exist", (Test test) ->
                 {
-                    final InMemoryCharacterStream output = getInMemoryCharacterStream(test);
-                    final Folder currentFolder = getInMemoryCurrentFolder(test);
-                    try (final QubProcess process = createProcess(output, currentFolder, "/i/dont/exist"))
+                    final InMemoryCharacterToByteStream output = QubCleanTests.getInMemoryCharacterToByteStream(test);
+                    final Folder currentFolder = QubCleanTests.getInMemoryCurrentFolder(test);
+                    try (final QubProcess process = QubCleanTests.createProcess(output, currentFolder, "/i/dont/exist"))
                     {
                         QubClean.run(QubClean.getParameters(process));
 
@@ -246,9 +246,9 @@ public interface QubCleanTests
 
                 runner.test("with named folder argument to unrooted folder that doesn't exist", (Test test) ->
                 {
-                    final InMemoryCharacterStream output = getInMemoryCharacterStream(test);
-                    final Folder currentFolder = getInMemoryCurrentFolder(test);
-                    try (final QubProcess process = createProcess(output, currentFolder, "i/dont/exist"))
+                    final InMemoryCharacterToByteStream output = QubCleanTests.getInMemoryCharacterToByteStream(test);
+                    final Folder currentFolder = QubCleanTests.getInMemoryCurrentFolder(test);
+                    try (final QubProcess process = QubCleanTests.createProcess(output, currentFolder, "i/dont/exist"))
                     {
                         QubClean.run(QubClean.getParameters(process));
 
@@ -263,9 +263,9 @@ public interface QubCleanTests
 
                 runner.test("with named folder argument to rooted folder that doesn't exist", (Test test) ->
                 {
-                    final InMemoryCharacterStream output = getInMemoryCharacterStream(test);
-                    final Folder currentFolder = getInMemoryCurrentFolder(test);
-                    try (final QubProcess process = createProcess(output, currentFolder, "-folder=/i/dont/exist"))
+                    final InMemoryCharacterToByteStream output = QubCleanTests.getInMemoryCharacterToByteStream(test);
+                    final Folder currentFolder = QubCleanTests.getInMemoryCurrentFolder(test);
+                    try (final QubProcess process = QubCleanTests.createProcess(output, currentFolder, "-folder=/i/dont/exist"))
                     {
                         QubClean.run(QubClean.getParameters(process));
 
@@ -280,9 +280,9 @@ public interface QubCleanTests
 
                 runner.test("with named folder argument to unrooted folder that doesn't exist", (Test test) ->
                 {
-                    final InMemoryCharacterStream output = getInMemoryCharacterStream(test);
-                    final Folder currentFolder = getInMemoryCurrentFolder(test);
-                    try (final QubProcess process = createProcess(output, currentFolder, "-folder=i/dont/exist"))
+                    final InMemoryCharacterToByteStream output = QubCleanTests.getInMemoryCharacterToByteStream(test);
+                    final Folder currentFolder = QubCleanTests.getInMemoryCurrentFolder(test);
+                    try (final QubProcess process = QubCleanTests.createProcess(output, currentFolder, "-folder=i/dont/exist"))
                     {
                         QubClean.run(QubClean.getParameters(process));
 
@@ -298,9 +298,9 @@ public interface QubCleanTests
         });
     }
 
-    static InMemoryCharacterStream getInMemoryCharacterStream(Test test)
+    static InMemoryCharacterToByteStream getInMemoryCharacterToByteStream(Test test)
     {
-        return new InMemoryCharacterStream();
+        return new InMemoryCharacterToByteStream();
     }
 
     static InMemoryFileSystem getInMemoryFileSystem(Test test)
@@ -317,22 +317,22 @@ public interface QubCleanTests
     {
         PreCondition.assertNotNull(test, "test");
 
-        return getInMemoryFileSystem(test).getFolder("/").await();
+        return QubCleanTests.getInMemoryFileSystem(test).getFolder("/").await();
     }
 
-    static QubProcess createProcess(CharacterWriteStream output, String... commandLineArguments)
+    static QubProcess createProcess(InMemoryCharacterToByteStream output, String... commandLineArguments)
     {
         PreCondition.assertNotNull(output, "output");
         PreCondition.assertNotNull(commandLineArguments, "commandLineArguments");
 
         final QubProcess result = QubProcess.create(commandLineArguments);
         result.setLineSeparator("\n");
-        result.setOutputCharacterWriteStream(output);
+        result.setOutputWriteStream(output);
 
         return result;
     }
 
-    static QubProcess createProcess(CharacterWriteStream output, Folder currentFolder, String... commandLineArguments)
+    static QubProcess createProcess(InMemoryCharacterToByteStream output, Folder currentFolder, String... commandLineArguments)
     {
         PreCondition.assertNotNull(output, "output");
         PreCondition.assertNotNull(currentFolder, "currentFolder");
