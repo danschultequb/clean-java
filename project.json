@@ -1,16 +1,15 @@
 {
   "publisher": "qub",
   "project": "clean-java",
-  "version": "4",
+  "version": "5",
   "java": {
     "mainClass": "qub.QubClean",
     "shortcutName": "qub-clean",
-    "version": "1.8",
     "dependencies": [
       {
         "publisher": "qub",
         "project": "lib-java",
-        "version": "21"
+        "version": "43"
       }
     ]
   }

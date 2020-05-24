@@ -11,11 +11,11 @@
     <orderEntry type="module-library">
       <library>
         <CLASSES>
-          <root url="jar://C:/qub/qub/lib-java/versions/21/lib-java.jar!/"/>
+          <root url="jar://C:/qub/qub/lib-java/versions/43/lib-java.jar!/"/>
         </CLASSES>
         <JAVADOC/>
         <SOURCES>
-          <root url="jar://C:/qub/qub/lib-java/versions/21/lib-java.sources.jar!/"/>
+          <root url="jar://C:/qub/qub/lib-java/versions/43/lib-java.sources.jar!/"/>
         </SOURCES>
       </library>
     </orderEntry>

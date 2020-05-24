@@ -48,7 +48,7 @@ public interface QubClean
         return Result.create(() ->
         {
             final Folder folderToClean = parameters.getFolderToClean();
-            final IndentedCharacterWriteStream output = new IndentedCharacterWriteStream(parameters.getOutput());
+            final IndentedCharacterWriteStream output = IndentedCharacterWriteStream.create(parameters.getOutput());
             final VerboseCharacterWriteStream verbose = parameters.getVerbose();
 
             output.writeLine("Cleaning...").await();
