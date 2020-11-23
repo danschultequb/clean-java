@@ -15,8 +15,8 @@ public interface QubCleanRun
         PreCondition.assertNotNull(process, "process");
 
         final CommandLineParameters parameters = process.createCommandLineParameters()
-            .setApplicationName("qub-clean")
-            .setApplicationDescription("Used to clean build outputs from source code projects.");
+            .setApplicationName(QubClean.applicationName)
+            .setApplicationDescription(QubClean.applicationDescription);
         final CommandLineParameter<Folder> folderToCleanParameter = parameters.addPositionalFolder("folder", process)
             .setValueName("<folder-to-clean>")
             .setDescription("The folder to clean. Defaults to the current folder.");
@@ -30,9 +30,9 @@ public interface QubCleanRun
             profiler.await();
 
             final Folder folderToClean = folderToCleanParameter.getValue().await();
-            final CharacterWriteStream output = process.getOutputWriteStream();
+            final CharacterToByteWriteStream output = process.getOutputWriteStream();
             final Folder qubCleanDataFolder = process.getQubProjectDataFolder().await();
-            final VerboseCharacterWriteStream verbose = verboseParameter.getVerboseCharacterWriteStream().await();
+            final VerboseCharacterToByteWriteStream verbose = verboseParameter.getVerboseCharacterToByteWriteStream().await();
             result = new QubCleanRunParameters(folderToClean, output, qubCleanDataFolder)
                 .setVerbose(verbose);
         }
@@ -48,11 +48,11 @@ public interface QubCleanRun
         {
             final Folder folderToClean = parameters.getFolderToClean();
             final Folder qubCleanDataFolder = parameters.getQubCleanDataFolder();
-            final LogCharacterWriteStreams logStreams = CommandLineLogsAction.addLogStream(qubCleanDataFolder, parameters.getOutput(), parameters.getVerbose());
+            final LogStreams logStreams = CommandLineLogsAction.addLogStream(qubCleanDataFolder, parameters.getOutput(), null, parameters.getVerbose());
             try (final CharacterWriteStream logStream = logStreams.getLogStream())
             {
-                final IndentedCharacterWriteStream output = IndentedCharacterWriteStream.create(logStreams.getCombinedStream(0));
-                final CharacterWriteStream verbose = logStreams.getCombinedStream(1);
+                final IndentedCharacterWriteStream output = IndentedCharacterWriteStream.create(logStreams.getOutput());
+                final CharacterWriteStream verbose = logStreams.getVerbose();
 
                 output.writeLine("Cleaning...").await();
 

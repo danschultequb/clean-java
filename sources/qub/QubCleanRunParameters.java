@@ -6,17 +6,17 @@ package qub;
 public class QubCleanRunParameters
 {
     private final Folder folderToClean;
-    private final CharacterWriteStream output;
+    private final CharacterToByteWriteStream output;
     private final Folder qubCleanDataFolder;
 
-    private VerboseCharacterWriteStream verbose;
+    private VerboseCharacterToByteWriteStream verbose;
 
     /**
      * Create a new QubCleanParameters object.
      * @param folderToClean The folder to clean.
      * @param output The output stream that messages will be written to.
      */
-    public QubCleanRunParameters(Folder folderToClean, CharacterWriteStream output, Folder qubCleanDataFolder)
+    public QubCleanRunParameters(Folder folderToClean, CharacterToByteWriteStream output, Folder qubCleanDataFolder)
     {
         PreCondition.assertNotNull(folderToClean, "folderToClean");
         PreCondition.assertNotNull(output, "output");
@@ -26,7 +26,7 @@ public class QubCleanRunParameters
         this.output = output;
         this.qubCleanDataFolder = qubCleanDataFolder;
 
-        this.verbose = new VerboseCharacterWriteStream(false, output);
+        this.verbose = VerboseCharacterToByteWriteStream.create(output).setIsVerbose(false);
     }
 
     /**
@@ -42,7 +42,7 @@ public class QubCleanRunParameters
      * Get the output stream where messages will be written.
      * @return The output stream where messages will be written.
      */
-    public CharacterWriteStream getOutput()
+    public CharacterToByteWriteStream getOutput()
     {
         return this.output;
     }
@@ -56,7 +56,7 @@ public class QubCleanRunParameters
      * Get the stream that will be used to write verbose messages.
      * @return The stream that will be used to write verbose messages.
      */
-    public VerboseCharacterWriteStream getVerbose()
+    public VerboseCharacterToByteWriteStream getVerbose()
     {
         return this.verbose;
     }
@@ -66,7 +66,7 @@ public class QubCleanRunParameters
      * @param verbose The stream that will be used to write verbose messages.
      * @return This object for method chaining.
      */
-    public QubCleanRunParameters setVerbose(VerboseCharacterWriteStream verbose)
+    public QubCleanRunParameters setVerbose(VerboseCharacterToByteWriteStream verbose)
     {
         PreCondition.assertNotNull(verbose, "verbose");
 
