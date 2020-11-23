@@ -3,10 +3,11 @@ package qub;
 /**
  * Parameters that can be passed to the qub-clean application.
  */
-public class QubCleanParameters
+public class QubCleanRunParameters
 {
     private final Folder folderToClean;
     private final CharacterWriteStream output;
+    private final Folder qubCleanDataFolder;
 
     private VerboseCharacterWriteStream verbose;
 
@@ -15,13 +16,15 @@ public class QubCleanParameters
      * @param folderToClean The folder to clean.
      * @param output The output stream that messages will be written to.
      */
-    public QubCleanParameters(Folder folderToClean, CharacterWriteStream output)
+    public QubCleanRunParameters(Folder folderToClean, CharacterWriteStream output, Folder qubCleanDataFolder)
     {
         PreCondition.assertNotNull(folderToClean, "folderToClean");
         PreCondition.assertNotNull(output, "output");
+        PreCondition.assertNotNull(qubCleanDataFolder, "qubCleanDataFolder");
 
         this.folderToClean = folderToClean;
         this.output = output;
+        this.qubCleanDataFolder = qubCleanDataFolder;
 
         this.verbose = new VerboseCharacterWriteStream(false, output);
     }
@@ -44,6 +47,11 @@ public class QubCleanParameters
         return this.output;
     }
 
+    public Folder getQubCleanDataFolder()
+    {
+        return this.qubCleanDataFolder;
+    }
+
     /**
      * Get the stream that will be used to write verbose messages.
      * @return The stream that will be used to write verbose messages.
@@ -58,7 +66,7 @@ public class QubCleanParameters
      * @param verbose The stream that will be used to write verbose messages.
      * @return This object for method chaining.
      */
-    public QubCleanParameters setVerbose(VerboseCharacterWriteStream verbose)
+    public QubCleanRunParameters setVerbose(VerboseCharacterWriteStream verbose)
     {
         PreCondition.assertNotNull(verbose, "verbose");
 
