@@ -25,11 +25,8 @@ public interface QubCleanTests
 
                 runner.test("with -?", (Test test) ->
                 {
-                    final InMemoryCharacterToByteStream output = InMemoryCharacterToByteStream.create();
-                    try (final QubProcess process = QubProcess.create("-?"))
+                    try (final FakeDesktopProcess process = FakeDesktopProcess.create("-?"))
                     {
-                        process.setOutputWriteStream(output);
-
                         QubClean.run(process);
 
                         test.assertEqual(
@@ -42,7 +39,41 @@ public interface QubCleanTests
                                 "Actions:",
                                 "  logs:          Show the logs folder.",
                                 "  run (default): Clean build outputs from source code projects."),
-                            Strings.getLines(output.getText().await()));
+                            Strings.getLines(process.getOutputWriteStream().getText().await()));
+                    }
+                });
+
+                runner.test("with run -?", (Test test) ->
+                {
+                    try (final FakeDesktopProcess process = FakeDesktopProcess.create("run", "-?"))
+                    {
+                        QubClean.run(process);
+
+                        test.assertEqual(
+                            Iterable.create(
+                                "Usage: qub-clean run [[--folder=]<folder-to-clean>] [--verbose] [--profiler] [--help]",
+                                "  Clean build outputs from source code projects.",
+                                "  --folder:     The folder to clean. Defaults to the current folder.",
+                                "  --verbose(v): Whether or not to show verbose logs.",
+                                "  --profiler:   Whether or not this application should pause before it is run to allow a profiler to be attached.",
+                                "  --help(?):    Show the help message for this application."),
+                            Strings.getLines(process.getOutputWriteStream().getText().await()));
+                    }
+                });
+
+                runner.test("with logs -?", (Test test) ->
+                {
+                    try (final FakeDesktopProcess process = FakeDesktopProcess.create("logs", "-?"))
+                    {
+                        QubClean.run(process);
+
+                        test.assertEqual(
+                            Iterable.create(
+                                "Usage: qub-clean logs [--openWith] [--help]",
+                                "  Show the logs folder.",
+                                "  --openWith: The application to use to open the logs folder.",
+                                "  --help(?):  Show the help message for this application."),
+                            Strings.getLines(process.getOutputWriteStream().getText().await()));
                     }
                 });
             });

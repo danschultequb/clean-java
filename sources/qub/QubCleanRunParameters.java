@@ -7,7 +7,7 @@ public class QubCleanRunParameters
 {
     private final Folder folderToClean;
     private final CharacterToByteWriteStream output;
-    private final Folder qubCleanDataFolder;
+    private final Folder dataFolder;
 
     private VerboseCharacterToByteWriteStream verbose;
 
@@ -16,17 +16,22 @@ public class QubCleanRunParameters
      * @param folderToClean The folder to clean.
      * @param output The output stream that messages will be written to.
      */
-    public QubCleanRunParameters(Folder folderToClean, CharacterToByteWriteStream output, Folder qubCleanDataFolder)
+    private QubCleanRunParameters(Folder folderToClean, CharacterToByteWriteStream output, Folder dataFolder)
     {
         PreCondition.assertNotNull(folderToClean, "folderToClean");
         PreCondition.assertNotNull(output, "output");
-        PreCondition.assertNotNull(qubCleanDataFolder, "qubCleanDataFolder");
+        PreCondition.assertNotNull(dataFolder, "dataFolder");
 
         this.folderToClean = folderToClean;
         this.output = output;
-        this.qubCleanDataFolder = qubCleanDataFolder;
+        this.dataFolder = dataFolder;
 
         this.verbose = VerboseCharacterToByteWriteStream.create(output).setIsVerbose(false);
+    }
+
+    public static QubCleanRunParameters create(Folder folderToClean, CharacterToByteWriteStream output, Folder dataFolder)
+    {
+        return new QubCleanRunParameters(folderToClean, output, dataFolder);
     }
 
     /**
@@ -47,9 +52,9 @@ public class QubCleanRunParameters
         return this.output;
     }
 
-    public Folder getQubCleanDataFolder()
+    public Folder getDataFolder()
     {
-        return this.qubCleanDataFolder;
+        return this.dataFolder;
     }
 
     /**

@@ -7,23 +7,18 @@ public interface QubClean
 
     static void main(String[] args)
     {
-        QubProcess.run(args, QubClean::run);
+        DesktopProcess.run(args, QubClean::run);
     }
 
-    static void run(QubProcess process)
+    static void run(DesktopProcess process)
     {
         PreCondition.assertNotNull(process, "process");
 
-        final CommandLineActions<QubProcess> actions = process.createCommandLineActions();
-        actions.setApplicationName(QubClean.applicationName);
-        actions.setApplicationDescription(QubClean.applicationDescription);
-
-        actions.addAction(QubCleanRun.actionName, QubCleanRun::getParameters, QubCleanRun::run)
-            .setDescription(QubCleanRun.actionDescription)
-            .setDefaultAction();
-
-        CommandLineLogsAction.add(actions);
-
-        actions.run(process);
+        process.createCommandLineActions()
+            .setApplicationName(QubClean.applicationName)
+            .setApplicationDescription(QubClean.applicationDescription)
+            .addAction(QubCleanRun::addAction)
+            .addAction(CommandLineLogsAction::addAction)
+            .run(process);
     }
 }
