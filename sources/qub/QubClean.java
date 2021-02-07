@@ -19,6 +19,6 @@ public interface QubClean
             .setApplicationDescription(QubClean.applicationDescription)
             .addAction(QubCleanRun::addAction)
             .addAction(CommandLineLogsAction::addAction)
-            .run(process);
+            .run();
     }
 }

@@ -11,8 +11,8 @@ public interface QubCleanRunTests
                 runner.test("with null process", (Test test) ->
                 {
                     final FakeDesktopProcess process = null;
-                    final String fullActionName = "full-action-name";
-                    test.assertThrows(() -> QubCleanRun.getParameters(process, fullActionName),
+                    final CommandLineAction action = CommandLineAction.create("full-action-name", (DesktopProcess actionProcess) -> {});
+                    test.assertThrows(() -> QubCleanRun.getParameters(process, action),
                         new PreConditionFailure("process cannot be null."));
                 });
                 
@@ -20,19 +20,9 @@ public interface QubCleanRunTests
                 {
                     try (final FakeDesktopProcess process = FakeDesktopProcess.create())
                     {
-                        final String fullActionName = null;
-                        test.assertThrows(() -> QubCleanRun.getParameters(process, fullActionName),
-                            new PreConditionFailure("fullActionName cannot be null."));
-                    }
-                });
-                
-                runner.test("with empty fullActionName", (Test test) ->
-                {
-                    try (final FakeDesktopProcess process = FakeDesktopProcess.create())
-                    {
-                        final String fullActionName = "";
-                        test.assertThrows(() -> QubCleanRun.getParameters(process, fullActionName),
-                            new PreConditionFailure("fullActionName cannot be empty."));
+                        final CommandLineAction action = null;
+                        test.assertThrows(() -> QubCleanRun.getParameters(process, action),
+                            new PreConditionFailure("action cannot be null."));
                     }
                 });
 
@@ -40,8 +30,8 @@ public interface QubCleanRunTests
                 {
                     try (final FakeDesktopProcess process = FakeDesktopProcess.create())
                     {
-                        final String fullActionName = "full-action-name";
-                        final QubCleanRunParameters parameters = QubCleanRun.getParameters(process, fullActionName);
+                        final CommandLineAction action = CommandLineAction.create("full-action-name", (DesktopProcess actionProcess) -> {});
+                        final QubCleanRunParameters parameters = QubCleanRun.getParameters(process, action);
                         test.assertNotNull(parameters);
                         test.assertEqual(process.getCurrentFolder(), parameters.getFolderToClean());
                         test.assertSame(process.getOutputWriteStream(), parameters.getOutput());
@@ -53,8 +43,9 @@ public interface QubCleanRunTests
                 {
                     try (final FakeDesktopProcess process = FakeDesktopProcess.create("-?"))
                     {
-                        final String fullActionName = "full-action-name";
-                        test.assertNull(QubCleanRun.getParameters(process, fullActionName));
+                        final CommandLineAction action = CommandLineAction.create("full-action-name", (DesktopProcess actionProcess) -> {})
+                            .setDescription("Clean build outputs from source code projects.");
+                        test.assertNull(QubCleanRun.getParameters(process, action));
 
                         test.assertEqual(
                             Iterable.create(
@@ -72,8 +63,8 @@ public interface QubCleanRunTests
                 {
                     try (final FakeDesktopProcess process = FakeDesktopProcess.create("hello/there"))
                     {
-                        final String fullActionName = "full-action-name";
-                        final QubCleanRunParameters parameters = QubCleanRun.getParameters(process, fullActionName);
+                        final CommandLineAction action = CommandLineAction.create("full-action-name", (DesktopProcess actionProcess) -> {});
+                        final QubCleanRunParameters parameters = QubCleanRun.getParameters(process, action);
                         test.assertNotNull(parameters);
                         test.assertEqual(process.getCurrentFolder().getFolder("hello/there").await(), parameters.getFolderToClean());
                         test.assertSame(process.getOutputWriteStream(), parameters.getOutput());
@@ -85,8 +76,8 @@ public interface QubCleanRunTests
                 {
                     try (final FakeDesktopProcess process = FakeDesktopProcess.create("--folder=hello/there"))
                     {
-                        final String fullActionName = "full-action-name";
-                        final QubCleanRunParameters parameters = QubCleanRun.getParameters(process, fullActionName);
+                        final CommandLineAction action = CommandLineAction.create("full-action-name", (DesktopProcess actionProcess) -> {});
+                        final QubCleanRunParameters parameters = QubCleanRun.getParameters(process, action);
                         test.assertNotNull(parameters);
                         test.assertEqual(process.getCurrentFolder().getFolder("hello/there").await(), parameters.getFolderToClean());
                         test.assertSame(process.getOutputWriteStream(), parameters.getOutput());
@@ -98,8 +89,8 @@ public interface QubCleanRunTests
                 {
                     try (final FakeDesktopProcess process = FakeDesktopProcess.create("/hello/there"))
                     {
-                        final String fullActionName = "full-action-name";
-                        final QubCleanRunParameters parameters = QubCleanRun.getParameters(process, fullActionName);
+                        final CommandLineAction action = CommandLineAction.create("full-action-name", (DesktopProcess actionProcess) -> {});
+                        final QubCleanRunParameters parameters = QubCleanRun.getParameters(process, action);
                         test.assertNotNull(parameters);
                         test.assertEqual(process.getFileSystem().getFolder("/hello/there").await(), parameters.getFolderToClean());
                         test.assertSame(process.getOutputWriteStream(), parameters.getOutput());
@@ -111,8 +102,8 @@ public interface QubCleanRunTests
                 {
                     try (final FakeDesktopProcess process = FakeDesktopProcess.create("--folder=/hello/there"))
                     {
-                        final String fullActionName = "full-action-name";
-                        final QubCleanRunParameters parameters = QubCleanRun.getParameters(process, fullActionName);
+                        final CommandLineAction action = CommandLineAction.create("full-action-name", (DesktopProcess actionProcess) -> {});
+                        final QubCleanRunParameters parameters = QubCleanRun.getParameters(process, action);
                         test.assertNotNull(parameters);
                         test.assertEqual(process.getFileSystem().getFolder("/hello/there").await(), parameters.getFolderToClean());
                         test.assertSame(process.getOutputWriteStream(), parameters.getOutput());

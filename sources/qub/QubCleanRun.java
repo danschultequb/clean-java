@@ -2,18 +2,12 @@ package qub;
 
 public interface QubCleanRun
 {
-    String actionName = "run";
-    String actionDescription = "Clean build outputs from source code projects.";
-
     static void addAction(CommandLineActions actions)
     {
         PreCondition.assertNotNull(actions, "actions");
 
-        final String fullActionName = actions.getFullActionName(QubCleanRun.actionName);
-        actions.addAction(QubCleanRun.actionName,
-            (DesktopProcess process) -> QubCleanRun.getParameters(process, fullActionName),
-            QubCleanRun::run)
-            .setDescription(QubCleanRun.actionDescription)
+        actions.addAction("run", QubCleanRun::getParameters, QubCleanRun::run)
+            .setDescription("Clean build outputs from source code projects.")
             .setDefaultAction();
     }
 
@@ -22,14 +16,12 @@ public interface QubCleanRun
      * @param process The QubProcess to populate the QubCleanParameters object from.
      * @return The QubCleanParameters object or null if a help argument was provided.
      */
-    static QubCleanRunParameters getParameters(DesktopProcess process, String fullActionName)
+    static QubCleanRunParameters getParameters(DesktopProcess process, CommandLineAction action)
     {
         PreCondition.assertNotNull(process, "process");
-        PreCondition.assertNotNullAndNotEmpty(fullActionName, "fullActionName");
+        PreCondition.assertNotNull(action, "action");
 
-        final CommandLineParameters parameters = process.createCommandLineParameters()
-            .setApplicationName(fullActionName)
-            .setApplicationDescription(QubCleanRun.actionDescription);
+        final CommandLineParameters parameters = action.createCommandLineParameters(process);
         final CommandLineParameter<Folder> folderToCleanParameter = parameters.addPositionalFolder("folder", process)
             .setValueName("<folder-to-clean>")
             .setDescription("The folder to clean. Defaults to the current folder.");
@@ -60,7 +52,7 @@ public interface QubCleanRun
         final Folder folderToClean = parameters.getFolderToClean();
         final Folder qubCleanDataFolder = parameters.getDataFolder();
         final LogStreams logStreams = CommandLineLogsAction.addLogStreamFromDataFolder(qubCleanDataFolder, parameters.getOutput(), parameters.getVerbose());
-        try (final CharacterWriteStream logStream = logStreams.getLogStream())
+        try (final Disposable logStream = logStreams.getLogStream())
         {
             final IndentedCharacterWriteStream output = IndentedCharacterWriteStream.create(logStreams.getOutput());
             final CharacterWriteStream verbose = logStreams.getVerbose();
