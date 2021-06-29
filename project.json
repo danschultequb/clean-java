@@ -1,7 +1,8 @@
 {
+  "$schema": "file:///C:/qub/qub/javaproject-java/data/javaproject.schema.json",
   "publisher": "qub",
   "project": "clean-java",
-  "version": "17",
+  "version": "18",
   "java": {
     "mainClass": "qub.QubClean",
     "shortcutName": "qub-clean",
@@ -9,7 +10,7 @@
       {
         "publisher": "qub",
         "project": "lib-java",
-        "version": "116"
+        "version": "141"
       }
     ]
   }
